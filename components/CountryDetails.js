@@ -3,6 +3,8 @@ import axios from "axios";
 import { View, Text } from "react-native";
 
 const CountryDetails = props => {
+	const { slug } = props.route.params;
+
 	const [confirmed, setConfirmed] = useState([]);
 	const [recovered, setRecovered] = useState([]);
 	const [deaths, setDeaths] = useState([]);
@@ -33,11 +35,17 @@ const CountryDetails = props => {
 	}, []);
 
 	return (
-		<View>
-			<Text>Confirmed: {confirmed}</Text>
-			<Text>Recovered: {recovered}</Text>
-			<Text>Deaths: {deaths}</Text>
-		</View>
+		<SafeAreaView>
+			<KeyboardAvoidingView behavior='padding'>
+				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
+					<View>
+						<Text>Confirmed: {confirmed}</Text>
+						<Text>Recovered: {recovered}</Text>
+						<Text>Deaths: {deaths}</Text>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</SafeAreaView>
 	);
 };
 
