@@ -2,8 +2,8 @@
   "devToolsPort": 19002,
   "expoServerPort": 19000,
   "packagerPort": 19001,
-  "packagerPid": 36676,
-  "expoServerNgrokUrl": "https://wd-46h.sametweb.covid19native.exp.direct",
-  "packagerNgrokUrl": "https://packager.wd-46h.sametweb.covid19native.exp.direct",
-  "ngrokPid": 36691
+  "packagerPid": 268,
+  "expoServerNgrokUrl": "https://ts-bwc.anonymous.covid19native.exp.direct",
+  "packagerNgrokUrl": "https://packager.ts-bwc.anonymous.covid19native.exp.direct",
+  "ngrokPid": 6348
 }

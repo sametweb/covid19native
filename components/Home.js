@@ -9,7 +9,7 @@ const Home = props => {
     <SafeAreaView>
       <KeyboardAvoidingView behavior="padding">
         <ScrollView style={{ padding: 10 }} keyboardDismissMode="on-drag">
-          <CountryList />
+          <CountryList navigation={props.navigation} />
           <View style={{ height: 50 }}></View>
         </ScrollView>
       </KeyboardAvoidingView>

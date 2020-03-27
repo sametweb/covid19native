@@ -3,16 +3,7 @@ import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Home from "./components/Home";
-
-import { Text, View } from "react-native";
-
-const CountryDetails = () => {
-  return (
-    <View>
-      <Text>Country Details</Text>
-    </View>
-  );
-};
+import CountryDetails from "./components/CountryDetails";
 
 const Stack = createStackNavigator();
 
