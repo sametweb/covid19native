@@ -36,10 +36,7 @@ const CountryList = props => {
       total: TotalConfirmed,
       active: TotalConfirmed - TotalRecovered - TotalDeaths,
       recovered: TotalRecovered,
-      deaths: TotalDeaths,
-      activePercent: Number((((TotalConfirmed - TotalRecovered - TotalDeaths) / TotalConfirmed) * 100).toFixed(2)),
-      recoveredPercent: Number(((TotalRecovered / TotalConfirmed) * 100).toFixed(2)),
-      deathsPercent: Number(((TotalDeaths / TotalConfirmed) * 100).toFixed(2))
+      deaths: TotalDeaths
     });
   }, [countries]);
 
