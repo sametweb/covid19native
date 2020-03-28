@@ -48,6 +48,10 @@ const CountryList = props => {
         setCountries(
           res.data.Countries.filter(
             country => country.Country && country.TotalConfirmed
+          ).map(country =>
+            country.Country === "US"
+              ? { ...country, Country: "United States of America" }
+              : country
           )
         );
       })
