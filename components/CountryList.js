@@ -10,6 +10,7 @@ import {
   Dimensions
 } from "react-native";
 import { PieChart } from "react-native-chart-kit";
+import { styles } from "../styles";
 
 const CountryList = props => {
   const [countries, setCountries] = useState([]);
@@ -36,10 +37,7 @@ const CountryList = props => {
       total: TotalConfirmed,
       active: TotalConfirmed - TotalRecovered - TotalDeaths,
       recovered: TotalRecovered,
-      deaths: TotalDeaths,
-      activePercent: Number((((TotalConfirmed - TotalRecovered - TotalDeaths) / TotalConfirmed) * 100).toFixed(2)),
-      recoveredPercent: Number(((TotalRecovered / TotalConfirmed) * 100).toFixed(2)),
-      deathsPercent: Number(((TotalDeaths / TotalConfirmed) * 100).toFixed(2))
+      deaths: TotalDeaths
     });
   }, [countries]);
 
@@ -47,7 +45,15 @@ const CountryList = props => {
     axios
       .get("https://api.covid19api.com/summary")
       .then(res => {
-        setCountries(res.data.Countries);
+        setCountries(
+          res.data.Countries.filter(
+            country => country.Country && country.TotalConfirmed
+          ).map(country =>
+            country.Country === "US"
+              ? { ...country, Country: "United States of America" }
+              : country
+          )
+        );
       })
       .catch(err => console.log(err));
   }, []);
@@ -94,32 +100,17 @@ const CountryList = props => {
 
   return (
     <View>
-      <View style={{ paddingBottom: 20 }}>
-        <Text style={{ fontSize: 24, marginBottom: 20, fontWeight: "bold" }}>
-          COVID-19 Statistics by Country
-        </Text>
+      <View style={styles.homeHeader}>
+        <Text style={styles.homeTitle}>COVID-19 Statistics by Country</Text>
       </View>
       {!countries.length || !stats.total ? (
         <ActivityIndicator size="large" />
       ) : (
         <View>
-          <View
-            style={{
-              backgroundColor: "#333",
-              paddingTop: 20,
-              borderRadius: 5,
-              marginBottom: 20
-            }}
-          >
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 14,
-                color: "white"
-              }}
-            >
-              <Text style={{ fontWeight: "bold" }}>{stats.total}</Text> people
-              got COVID-19 as of {today}.
+          <View style={styles.homePieChart}>
+            <Text style={styles.homePieChartTitle}>
+              <Text style={styles.bold}>{stats.total}</Text> people got COVID-19
+              as of {today}.
             </Text>
             <PieChart
               data={data}
@@ -132,57 +123,33 @@ const CountryList = props => {
             />
           </View>
 
-          <View style={{ flexDirection: "row", marginBottom: 20 }}>
+          <View style={styles.searchForm}>
             <TextInput
               value={search}
               onChangeText={text => setSearch(text)}
               placeholder="search countries"
-              style={{
-                width: "80%",
-                height: 35,
-                paddingLeft: 10,
-                backgroundColor: "white"
-              }}
+              style={styles.searchFormInput}
             ></TextInput>
             <TouchableOpacity
               onPress={() => setSearch("")}
-              style={{
-                width: "20%",
-                height: 35,
-                borderLeftWidth: 0,
-                backgroundColor: "#333",
-                justifyContent: "center",
-                alignItems: "center"
-              }}
+              style={styles.searchFormButton}
             >
-              <Text
-                style={{ color: "white", fontWeight: "bold", fontSize: 12 }}
-              >
-                Clear
-              </Text>
+              <Text style={styles.searchFormButtonText}>Clear</Text>
             </TouchableOpacity>
           </View>
           <DataTable>
-            <DataTable.Header style={{ backgroundColor: "#333" }}>
+            <DataTable.Header style={styles.tableHeader}>
               <DataTable.Title>
-                <Text style={{ fontWeight: "bold", color: "white" }}>
-                  Country
-                </Text>
+                <Text style={styles.tableHeaderText}>Country</Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={{ fontWeight: "bold", color: "white" }}>
-                  Total
-                </Text>
+                <Text style={styles.tableHeaderText}>Total</Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={{ fontWeight: "bold", color: "white" }}>
-                  Recovered
-                </Text>
+                <Text style={styles.tableHeaderText}>Recovered</Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={{ fontWeight: "bold", color: "white" }}>
-                  Deaths
-                </Text>
+                <Text style={styles.tableHeaderText}>Deaths</Text>
               </DataTable.Title>
             </DataTable.Header>
             {countries
@@ -198,7 +165,7 @@ const CountryList = props => {
                       })
                     }
                     key={i}
-                    style={i % 2 ? { backgroundColor: "#e1e1e2" } : {}}
+                    style={i % 2 ? styles.altBg : {}}
                   >
                     <DataTable.Cell>{country.Country}</DataTable.Cell>
                     <DataTable.Cell numeric>
