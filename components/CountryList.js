@@ -47,7 +47,11 @@ const CountryList = props => {
     axios
       .get("https://api.covid19api.com/summary")
       .then(res => {
-        setCountries(res.data.Countries);
+        setCountries(
+          res.data.Countries.filter(
+            country => country.Country && country.TotalConfirmed
+          )
+        );
       })
       .catch(err => console.log(err));
   }, []);
