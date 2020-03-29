@@ -6,8 +6,10 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions
 } from "react-native";
+import { PieChart } from "react-native-chart-kit";
 
 const CountryList = props => {
   const [countries, setCountries] = useState([]);
@@ -44,14 +46,56 @@ const CountryList = props => {
   useEffect(() => {
     axios
       .get("https://api.covid19api.com/summary")
-      .then(res => setCountries(res.data.Countries))
+      .then(res => {
+        setCountries(res.data.Countries);
+      })
       .catch(err => console.log(err));
   }, []);
+
+  data = [
+    {
+      name: "Active Cases",
+      count: stats.active,
+      color: "lightyellow",
+      legendFontColor: "#fff",
+      legendFontSize: 12
+    },
+    {
+      name: "Recovered",
+      count: stats.recovered,
+      color: "skyblue",
+      legendFontColor: "#fff",
+      legendFontSize: 12
+    },
+    {
+      name: "Deaths",
+      count: stats.deaths,
+      color: "pink",
+      legendFontColor: "#fff",
+      legendFontSize: 12
+    }
+  ];
+
+  const chartConfig = {
+    backgroundGradientFrom: "#1E2923",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#08130D",
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2, // optional, default 3
+    barPercentage: 0.5
+  };
+
+  const screenWidth = Dimensions.get("window").width - 20;
+
+  const date = new Date();
+  const today = `${date.getMonth() +
+    1}/${date.getDate()}/${date.getFullYear()}`;
 
   return (
     <View>
       <View style={{ paddingBottom: 20 }}>
-        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+        <Text style={{ fontSize: 24, marginBottom: 20, fontWeight: "bold" }}>
           COVID-19 Statistics by Country
         </Text>
       </View>
@@ -59,23 +103,35 @@ const CountryList = props => {
         <ActivityIndicator size="large" />
       ) : (
         <View>
-          {/* prettier-ignore */}
-          <View style={{ marginBottom: 20 }}>
-      <View style={{ height: 30, width: "100%", backgroundColor: "pink" }}>
-        <View style={{ height: 30, width: `${stats.activePercent}%`, backgroundColor: "lightyellow" }}>
-          <View style={{ height: 30, width: `${stats.recoveredPercent}%`, backgroundColor: "skyblue" }} >
-            <View style={{ height: 30, width: `${stats.deathsPercent}%`, backgroundColor: "crimson" }}></View>
+          <View
+            style={{
+              backgroundColor: "#333",
+              paddingTop: 20,
+              borderRadius: 5,
+              marginBottom: 20
+            }}
+          >
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 14,
+                color: "white"
+              }}
+            >
+              <Text style={{ fontWeight: "bold" }}>{stats.total}</Text> people
+              got COVID-19 as of {today}.
+            </Text>
+            <PieChart
+              data={data}
+              width={screenWidth}
+              height={200}
+              chartConfig={chartConfig}
+              accessor="count"
+              backgroundColor="transparent"
+              paddingLeft="0"
+            />
           </View>
-        </View>
-      </View>
-      </View>
-          {/* prettier-ignore */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 }}>
-      <View style={{ width: 12, height: 12, backgroundColor: 'pink'}}></View><Text style={{fontSize: 10}}>Total {stats.total}</Text>
-        <View style={{ width: 12, height: 12, backgroundColor: 'lightyellow'}}></View><Text style={{fontSize: 10}}>Active {stats.activePercent}%</Text>
-        <View style={{ width: 12, height: 12, backgroundColor: 'skyblue'}}></View><Text style={{fontSize: 10}}>Recovered {stats.recoveredPercent}%</Text>
-        <View style={{ width: 12, height: 12, backgroundColor: 'crimson'}}></View><Text style={{fontSize: 10}}>Deaths { stats.deathsPercent}%</Text>
-      </View>
+
           <View style={{ flexDirection: "row", marginBottom: 20 }}>
             <TextInput
               value={search}
@@ -85,9 +141,6 @@ const CountryList = props => {
                 width: "80%",
                 height: 35,
                 paddingLeft: 10,
-                // borderWidth: 1,
-                // borderColor: "#ccc",
-                // borderStyle: "solid",
                 backgroundColor: "white"
               }}
             ></TextInput>
@@ -96,9 +149,6 @@ const CountryList = props => {
               style={{
                 width: "20%",
                 height: 35,
-                // borderWidth: 1,
-                // borderColor: "#ccc",
-                // borderStyle: "solid",
                 borderLeftWidth: 0,
                 backgroundColor: "#333",
                 justifyContent: "center",
@@ -142,6 +192,11 @@ const CountryList = props => {
               .map((country, i) => {
                 return (
                   <DataTable.Row
+                    onPress={() =>
+                      props.navigation.navigate("CountryDetails", {
+                        slug: country.Slug
+                      })
+                    }
                     key={i}
                     style={i % 2 ? { backgroundColor: "#e1e1e2" } : {}}
                   >

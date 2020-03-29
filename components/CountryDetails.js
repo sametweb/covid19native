@@ -5,16 +5,12 @@ import {
 	Text,
 	SafeAreaView,
 	KeyboardAvoidingView,
-	ScrollView
+	ScrollView,
+	Dimensions,
+	StyleSheet
 } from "react-native";
 
-import { PieChart } from "react-native-svg-charts";
-import {
-	VictoryBar,
-	VictoryChart,
-	VictoryTheme,
-	VictoryScatter
-} from "victory-native";
+import { BarChart, LineChart } from "react-native-chart-kit";
 
 const CountryDetails = props => {
 	// const { slug } = props.route.params;
@@ -48,41 +44,40 @@ const CountryDetails = props => {
 		getCases("us");
 	}, []);
 
-	const data = [
-		{ x: "confirmed", y: confirmed },
-		{ x: "recovered", y: recovered },
-		{ x: "deaths", y: deaths }
-	];
+	const data = {
+		labels: ["Recovered", "Deaths"],
+		datasets: [
+			{
+				data: [recovered, deaths]
+			}
+		]
+	};
+
+	const chartConfig = {
+		backgroundGradientFrom: "#333333",
+		backgroundGradientTo: "#262626",
+		decimalPlaces: 0,
+		color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`
+	};
+
+	const screenWidth = Dimensions.get("window").width - 20;
 
 	return (
 		<SafeAreaView>
 			<KeyboardAvoidingView behavior='padding'>
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
-					<View
-						style={{
-							flex: 1,
-							justifyContent: "center",
-							alignItems: "center",
-							marginTop: 30
-						}}
-					>
-						<Text>US</Text>
-						<Text>Confirmed: {confirmed}</Text>
-						<Text>Recovered: {recovered}</Text>
-						<Text>Deaths: {deaths}</Text>
-						<View>
-							<VictoryChart
-								theme={VictoryTheme.material}
-								domain={{ x: [0, 3], y: [0, 100000] }}
-								width={340}
-							>
-								<VictoryScatter
-									style={{ data: { fill: "#c43a31" } }}
-									size={7}
-									data={data}
-									labels={({ datum }) => ` ${datum.y}`}
-								/>
-							</VictoryChart>
+					<View style={styles.container}>
+						<Text style={styles.country}>United States of America</Text>
+						<View style={styles.barChartContainer}>
+							<Text style={styles.barChartHeader}>Confirmed: {confirmed}</Text>
+							<BarChart
+								style={styles.barChart}
+								data={data}
+								width={screenWidth}
+								height={220}
+								chartConfig={chartConfig}
+								fromZero
+							/>
 						</View>
 					</View>
 				</ScrollView>
@@ -90,5 +85,34 @@ const CountryDetails = props => {
 		</SafeAreaView>
 	);
 };
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 30
+	},
+	country: {
+		fontSize: 24,
+		marginBottom: 20,
+		fontWeight: "bold"
+	},
+	barChartContainer: {
+		backgroundColor: "#000",
+		marginTop: 10,
+		borderRadius: 5,
+		backgroundColor: "#333333"
+	},
+	barChartHeader: {
+		color: "#fff",
+		fontWeight: "bold",
+		textAlign: "center",
+		marginTop: 10
+	},
+	barChart: {
+		marginVertical: 8
+	}
+});
 
 export default CountryDetails;
