@@ -13,7 +13,7 @@ import {
 import { BarChart, LineChart } from "react-native-chart-kit";
 
 const CountryDetails = props => {
-	// const { slug } = props.route.params;
+	const { slug } = props.route.params;
 
 	const [confirmed, setConfirmed] = useState([]);
 	const [recovered, setRecovered] = useState([]);
@@ -36,9 +36,7 @@ const CountryDetails = props => {
 				const fifteenDays = dailyConfirmed.slice(1).slice(-15);
 
 				const date = res.data.map(({ Date }) => Date);
-				const lastFifteenDays = date.map(date =>
-					date.slice(6, 10).replace("-", "/")
-				);
+				const lastFifteenDays = date.map(date => date.slice(6, 10));
 				setFifteenDays(fifteenDays);
 				setDailyStats({
 					...dailyStats,
@@ -76,8 +74,8 @@ const CountryDetails = props => {
 	console.log("DATE", dailyStats.date);
 
 	useEffect(() => {
-		getCases("us");
-	}, []);
+		getCases(slug);
+	}, [slug]);
 
 	const barChartData = {
 		labels: [
@@ -120,7 +118,9 @@ const CountryDetails = props => {
 			<KeyboardAvoidingView behavior='padding'>
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
 					<View style={styles.container}>
-						<Text style={styles.country}>United States of America</Text>
+						<Text style={styles.country}>
+							{slug.charAt(0).toUpperCase() + slug.slice(1)}
+						</Text>
 						{confirmed && recovered && deaths ? (
 							<View style={styles.barChartContainer}>
 								<Text style={styles.barChartHeader}>
