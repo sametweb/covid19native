@@ -8,14 +8,14 @@ import CountryDetails from "./components/CountryDetails";
 const Stack = createStackNavigator();
 
 const App = props => {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator headerMode="none">
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="CountryDetails" component={CountryDetails} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+	return (
+		<NavigationContainer>
+			<Stack.Navigator headerMode='none'>
+				<Stack.Screen name='Home' component={Home} />
+				<Stack.Screen name='CountryDetails' component={CountryDetails} />
+			</Stack.Navigator>
+		</NavigationContainer>
+	);
 };
 
 export default App;
