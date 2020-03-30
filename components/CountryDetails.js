@@ -112,22 +112,22 @@ const CountryDetails = props => {
 	};
 
 	const screenWidth = Dimensions.get("window").width - 20;
+	const title = (slug.charAt(0).toUpperCase() + slug.slice(1)).replace(
+		"-",
+		" "
+	);
 
 	return (
 		<SafeAreaView>
 			<KeyboardAvoidingView behavior='padding'>
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
 					<View style={styles.container}>
-						<Text style={styles.country}>
-							{slug.charAt(0).toUpperCase() + slug.slice(1)}
-						</Text>
+						<Text style={styles.country}>{title}</Text>
 						{confirmed ? (
-							<View style={styles.barChartContainer}>
-								<Text style={styles.barChartHeader}>
-									Confirmed: {confirmed}
-								</Text>
+							<View style={styles.chartContainer}>
+								<Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
 								<BarChart
-									style={styles.barChart}
+									style={styles.chart}
 									data={barChartData}
 									width={screenWidth}
 									height={220}
@@ -139,11 +139,12 @@ const CountryDetails = props => {
 							<Text>Loading...</Text>
 						)}
 						{fifteenDays.length ? (
-							<View style={styles.barChartContainer}>
-								<Text style={styles.barChartHeader}>
+							<View style={styles.chartContainer}>
+								<Text style={styles.chartHeader}>
 									COVID-19's Spread last 15 days
 								</Text>
 								<LineChart
+									style={styles.chart}
 									data={lineChartData}
 									width={screenWidth}
 									height={256}
@@ -188,19 +189,19 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 		fontWeight: "bold"
 	},
-	barChartContainer: {
+	chartContainer: {
 		marginTop: 10,
 		marginBottom: 40,
 		borderRadius: 5,
 		backgroundColor: "#333333"
 	},
-	barChartHeader: {
+	chartHeader: {
 		color: "#fff",
 		fontWeight: "bold",
 		textAlign: "center",
 		marginTop: 10
 	},
-	barChart: {
+	chart: {
 		marginVertical: 8
 	}
 });
