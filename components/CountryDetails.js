@@ -121,7 +121,7 @@ const CountryDetails = props => {
 						<Text style={styles.country}>
 							{slug.charAt(0).toUpperCase() + slug.slice(1)}
 						</Text>
-						{confirmed && recovered && deaths ? (
+						{confirmed ? (
 							<View style={styles.barChartContainer}>
 								<Text style={styles.barChartHeader}>
 									Confirmed: {confirmed}
