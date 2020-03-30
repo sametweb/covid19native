@@ -18,37 +18,85 @@ const CountryDetails = props => {
 	const [confirmed, setConfirmed] = useState([]);
 	const [recovered, setRecovered] = useState([]);
 	const [deaths, setDeaths] = useState([]);
+	const [fifteenDays, setFifteenDays] = useState([]);
+	const [dailyStats, setDailyStats] = useState({
+		date: [],
+		recovered: [],
+		deaths: []
+	});
 
 	const getCases = country => {
 		axios
 			.get(
 				`https://api.covid19api.com/total/country/${country}/status/confirmed`
 			)
-			.then(res => setConfirmed(res.data[res.data.length - 1].Cases))
+			.then(res => {
+				setConfirmed(res.data[res.data.length - 1].Cases);
+				const dailyConfirmed = res.data.map(({ Cases }) => Cases);
+				const fifteenDays = dailyConfirmed.slice(1).slice(-15);
+
+				const date = res.data.map(({ Date }) => Date);
+				const lastFifteenDays = date.map(date =>
+					date.slice(6, 10).replace("-", "/")
+				);
+				setFifteenDays(fifteenDays);
+				setDailyStats({
+					...dailyStats,
+					date: lastFifteenDays.slice(1).slice(-15)
+				});
+			})
 			.catch(error => console.log(error));
 
 		axios
 			.get(
 				`https://api.covid19api.com/total/country/${country}/status/recovered`
 			)
-			.then(res => setRecovered(res.data[res.data.length - 1].Cases))
+			.then(res => {
+				setRecovered(res.data[res.data.length - 1].Cases);
+				// const dailyRecovered = res.data.map(({ Cases }) => Cases);
+				// const fifteenDays = dailyRecovered.slice(1).slice(-30);
+				// setDailyStats({ ...dailyStats, recovered: fifteenDays });
+				// console.log("RECOVERED", dailyStats.recovered);
+			})
 			.catch(error => console.log(error));
 
 		axios
 			.get(`https://api.covid19api.com/total/country/${country}/status/deaths`)
-			.then(res => setDeaths(res.data[res.data.length - 1].Cases))
+			.then(res => {
+				setDeaths(res.data[res.data.length - 1].Cases);
+				// const dailyDeaths = res.data.map(({ Cases }) => Cases);
+				// setDailyStats({ ...dailyStats, deaths: dailyDeaths });
+				// console.log("DEATHS", dailyStats.deaths);
+			})
 			.catch(error => console.log(error));
 	};
+
+	// console.log("CONFIRMED", dailyStats.confirmed);
+	// console.log("LAST MONTH", fifteenDays);
+	console.log("DATE", dailyStats.date);
 
 	useEffect(() => {
 		getCases("us");
 	}, []);
 
-	const data = {
-		labels: ["Recovered", "Deaths"],
+	const barChartData = {
+		labels: [
+			`Recovered ${recovered}
+		`,
+			`Deaths ${deaths}`
+		],
 		datasets: [
 			{
 				data: [recovered, deaths]
+			}
+		]
+	};
+
+	const lineChartData = {
+		labels: dailyStats.date,
+		datasets: [
+			{
+				data: fifteenDays
 			}
 		]
 	};
@@ -57,7 +105,12 @@ const CountryDetails = props => {
 		backgroundGradientFrom: "#333333",
 		backgroundGradientTo: "#262626",
 		decimalPlaces: 0,
-		color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`
+		color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+		propsForDots: {
+			r: "5",
+			strokeWidth: "2",
+			stroke: "#ffa726"
+		}
 	};
 
 	const screenWidth = Dimensions.get("window").width - 20;
@@ -68,17 +121,54 @@ const CountryDetails = props => {
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
 					<View style={styles.container}>
 						<Text style={styles.country}>United States of America</Text>
-						<View style={styles.barChartContainer}>
-							<Text style={styles.barChartHeader}>Confirmed: {confirmed}</Text>
-							<BarChart
-								style={styles.barChart}
-								data={data}
-								width={screenWidth}
-								height={220}
-								chartConfig={chartConfig}
-								fromZero
-							/>
-						</View>
+						{confirmed && recovered && deaths ? (
+							<View style={styles.barChartContainer}>
+								<Text style={styles.barChartHeader}>
+									Confirmed: {confirmed}
+								</Text>
+								<BarChart
+									style={styles.barChart}
+									data={barChartData}
+									width={screenWidth}
+									height={220}
+									chartConfig={chartConfig}
+									fromZero
+								/>
+							</View>
+						) : (
+							<Text>Loading...</Text>
+						)}
+						{fifteenDays.length ? (
+							<View style={styles.barChartContainer}>
+								<Text style={styles.barChartHeader}>
+									COVID-19's Spread last 15 days
+								</Text>
+								<LineChart
+									data={lineChartData}
+									width={screenWidth}
+									height={256}
+									chartConfig={chartConfig}
+									bezier
+									withInnerLines={false}
+									verticalLabelRotation={60}
+									// renderDotContent={({ x, y, index }) => (
+									// 	<Text
+									// 		style={{
+									// 			position: "absolute",
+									// 			top: y,
+									// 			left: x,
+									// 			color: "#fff"
+									// 		}}
+									// 	>
+									// 		a
+									// 	</Text>
+									// )}
+									// formatXLabel={x => "a"}
+								/>
+							</View>
+						) : (
+							<Text>Loading...</Text>
+						)}
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
@@ -99,8 +189,8 @@ const styles = StyleSheet.create({
 		fontWeight: "bold"
 	},
 	barChartContainer: {
-		backgroundColor: "#000",
 		marginTop: 10,
+		marginBottom: 40,
 		borderRadius: 5,
 		backgroundColor: "#333333"
 	},
