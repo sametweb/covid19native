@@ -2,9 +2,8 @@
   "devToolsPort": 19002,
   "expoServerPort": 19000,
   "packagerPort": 19001,
-  "packagerPid": 16296,
-  "expoServerNgrokUrl": "https://ts-bwc.anonymous.covid19native.exp.direct",
-  "packagerNgrokUrl": "https://packager.ts-bwc.anonymous.covid19native.exp.direct",
-  "ngrokPid": 11988
-
+  "packagerPid": 11964,
+  "expoServerNgrokUrl": "https://8v-79p.anonymous.covid19native.exp.direct",
+  "packagerNgrokUrl": "https://packager.8v-79p.anonymous.covid19native.exp.direct",
+  "ngrokPid": 9780
 }

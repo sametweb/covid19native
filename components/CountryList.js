@@ -11,11 +11,15 @@ import {
 } from "react-native";
 import { PieChart } from "react-native-chart-kit";
 import { styles } from "../styles";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 const CountryList = props => {
   const [countries, setCountries] = useState([]);
   const [stats, setStats] = useState({});
   const [search, setSearch] = useState("");
+  const [totalSort, setTotalSort] = useState(null);
+  const [recoveredSort, setRecoveredSort] = useState(null);
+  const [deathsSort, setDeathsSort] = useState(null);
 
   useEffect(() => {
     const TotalConfirmed = countries.reduce(
@@ -98,6 +102,54 @@ const CountryList = props => {
   const today = `${date.getMonth() +
     1}/${date.getDate()}/${date.getFullYear()}`;
 
+  const totalColumnToggle = () => {
+    setTotalSort(totalSort === "asc" ? "desc" : "asc");
+    setRecoveredSort(null);
+    setDeathsSort(null);
+  };
+
+  const recoveredColumnToggle = () => {
+    setTotalSort(null);
+    setRecoveredSort(recoveredSort === "asc" ? "desc" : "asc");
+    setDeathsSort(null);
+  };
+
+  const deathsColumnToggle = () => {
+    setTotalSort(null);
+    setRecoveredSort(null);
+    setDeathsSort(deathsSort === "asc" ? "desc" : "asc");
+  };
+
+  useEffect(() => {
+    if (totalSort === "desc") {
+      setCountries([
+        ...countries.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed)
+      ]);
+    } else if (totalSort === "asc") {
+      setCountries([
+        ...countries.sort((a, b) => a.TotalConfirmed - b.TotalConfirmed)
+      ]);
+    }
+    if (recoveredSort === "desc") {
+      setCountries([
+        ...countries.sort((a, b) => b.TotalRecovered - a.TotalRecovered)
+      ]);
+    } else if (recoveredSort === "asc") {
+      setCountries([
+        ...countries.sort((a, b) => a.TotalRecovered - b.TotalRecovered)
+      ]);
+    }
+    if (deathsSort === "desc") {
+      setCountries([
+        ...countries.sort((a, b) => b.TotalDeaths - a.TotalDeaths)
+      ]);
+    } else if (deathsSort === "asc") {
+      setCountries([
+        ...countries.sort((a, b) => a.TotalDeaths - b.TotalDeaths)
+      ]);
+    }
+  }, [totalSort, recoveredSort, deathsSort]);
+
   return (
     <View>
       <View style={styles.homeHeader}>
@@ -143,13 +195,49 @@ const CountryList = props => {
                 <Text style={styles.tableHeaderText}>Country</Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={styles.tableHeaderText}>Total</Text>
+                <Text
+                  style={styles.tableHeaderText}
+                  onPress={() => totalColumnToggle()}
+                >
+                  {totalSort === "asc" ? (
+                    <Icon name="sort-asc" size={12} color="white" />
+                  ) : totalSort === "desc" ? (
+                    <Icon name="sort-desc" size={12} color="white" />
+                  ) : (
+                    <Icon name="unsorted" size={12} color="white" />
+                  )}{" "}
+                  Total
+                </Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={styles.tableHeaderText}>Recovered</Text>
+                <Text
+                  style={styles.tableHeaderText}
+                  onPress={() => recoveredColumnToggle()}
+                >
+                  {recoveredSort === "asc" ? (
+                    <Icon name="sort-asc" size={12} color="white" />
+                  ) : recoveredSort === "desc" ? (
+                    <Icon name="sort-desc" size={12} color="white" />
+                  ) : (
+                    <Icon name="unsorted" size={12} color="white" />
+                  )}{" "}
+                  Recovered
+                </Text>
               </DataTable.Title>
               <DataTable.Title numeric>
-                <Text style={styles.tableHeaderText}>Deaths</Text>
+                <Text
+                  style={styles.tableHeaderText}
+                  onPress={() => deathsColumnToggle()}
+                >
+                  {deathsSort === "asc" ? (
+                    <Icon name="sort-asc" size={12} color="white" />
+                  ) : deathsSort === "desc" ? (
+                    <Icon name="sort-desc" size={12} color="white" />
+                  ) : (
+                    <Icon name="unsorted" size={12} color="white" />
+                  )}{" "}
+                  Deaths
+                </Text>
               </DataTable.Title>
             </DataTable.Header>
             {countries
@@ -169,13 +257,13 @@ const CountryList = props => {
                   >
                     <DataTable.Cell>{country.Country}</DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {country.TotalConfirmed}
+                      {country.TotalConfirmed.toLocaleString()}
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {country.TotalRecovered}
+                      {country.TotalRecovered.toLocaleString()}
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {country.TotalDeaths}
+                      {country.TotalDeaths.toLocaleString()}
                     </DataTable.Cell>
                   </DataTable.Row>
                 );
