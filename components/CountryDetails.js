@@ -24,6 +24,7 @@ const CountryDetails = props => {
     recovered: [],
     deaths: []
   });
+  const [countryName, setCountryName] = useState("");
 
   const getCases = country => {
     axios
@@ -31,16 +32,19 @@ const CountryDetails = props => {
         `https://api.covid19api.com/total/country/${country}/status/confirmed`
       )
       .then(res => {
+        setCountryName(res.data[0].Country);
         setConfirmed(res.data[res.data.length - 1].Cases);
         const dailyConfirmed = res.data.map(({ Cases }) => Cases);
-        const fifteenDays = dailyConfirmed.slice(1).slice(-15);
+        const fifteenDays = dailyConfirmed;
+        // .slice(1).slice(-15);
 
         const date = res.data.map(({ Date }) => Date);
         const lastFifteenDays = date.map(date => date.slice(6, 10));
         setFifteenDays(fifteenDays);
         setDailyStats({
           ...dailyStats,
-          date: lastFifteenDays.slice(1).slice(-15)
+          date: lastFifteenDays
+          // .slice(1).slice(-15)
         });
       })
       .catch(error => console.log(error));
@@ -79,9 +83,9 @@ const CountryDetails = props => {
 
   const barChartData = {
     labels: [
-      `Recovered ${recovered}
+      `Recovered: ${recovered.toLocaleString()}
 		`,
-      `Deaths ${deaths}`
+      `Deaths: ${deaths.toLocaleString()}`
     ],
     datasets: [
       {
@@ -105,27 +109,31 @@ const CountryDetails = props => {
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
     propsForDots: {
-      r: "5",
-      strokeWidth: "2",
+      r: "2",
+      strokeWidth: "0",
       stroke: "#ffa726"
     }
   };
 
   const screenWidth = Dimensions.get("window").width - 20;
-  const title = (slug.charAt(0).toUpperCase() + slug.slice(1)).replace(
-    "-",
-    " "
-  );
+  // const title = (slug.charAt(0).toUpperCase() + slug.slice(1)).replace(
+  //   "-",
+  //   " "
+  // );
 
   return (
     <SafeAreaView>
       <KeyboardAvoidingView behavior="padding">
         <ScrollView style={{ padding: 10 }} keyboardDismissMode="on-drag">
           <View style={styles.container}>
-            <Text style={styles.country}>{title}</Text>
+            <Text style={styles.country}>
+              {countryName === "US" ? "United States of America" : countryName}
+            </Text>
             {confirmed ? (
               <View style={styles.chartContainer}>
-                <Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
+                <Text style={styles.chartHeader}>
+                  Confirmed: {confirmed.toLocaleString()}
+                </Text>
                 <BarChart
                   style={styles.chart}
                   data={barChartData}
@@ -133,6 +141,7 @@ const CountryDetails = props => {
                   height={220}
                   chartConfig={chartConfig}
                   fromZero
+                  withHorizontalLabels={false}
                 />
               </View>
             ) : (
@@ -141,7 +150,10 @@ const CountryDetails = props => {
             {fifteenDays.length ? (
               <View style={styles.chartContainer}>
                 <Text style={styles.chartHeader}>
-                  COVID-19's Spread last 15 days
+                  COVID-19's Spread in{" "}
+                  {countryName === "US"
+                    ? "United States of America"
+                    : countryName}
                 </Text>
                 <LineChart
                   style={styles.chart}
@@ -152,18 +164,40 @@ const CountryDetails = props => {
                   fromZero
                   bezier
                   withInnerLines={false}
-                  verticalLabelRotation={60}
+                  verticalLabelRotation={0}
+                  formatYLabel={X => Number(X).toLocaleString()}
+                  formatXLabel={Y => {
+                    const month = Number(Y.split("")[0]);
+                    const day = Number(Y.split("-")[1]);
+                    const months = [
+                      "Jan",
+                      "Feb",
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec"
+                    ];
+                    return day % 14 ? "" : `${months[month - 1]} ${day}`;
+                  }}
                   // renderDotContent={({ x, y, index }) => (
-                  // 	<Text
-                  // 		style={{
-                  // 			position: "absolute",
-                  // 			top: y,
-                  // 			left: x,
-                  // 			color: "#fff"
-                  // 		}}
-                  // 	>
-                  // 		a
-                  // 	</Text>
+                  //   <Text
+                  //     key={index}
+                  //     style={{
+                  //       position: "absolute",
+                  //       top: y,
+                  //       left: x,
+                  //       color: "#fff"
+                  //     }}
+                  //     onPress={() => props.navigation.navigate("Home")}
+                  //   >
+                  //     a
+                  //   </Text>
                   // )}
                   // formatXLabel={x => "a"}
                 />
