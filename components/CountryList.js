@@ -20,6 +20,7 @@ const CountryList = props => {
   const [totalSort, setTotalSort] = useState(null);
   const [recoveredSort, setRecoveredSort] = useState(null);
   const [deathsSort, setDeathsSort] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const TotalConfirmed = countries.reduce(
@@ -103,18 +104,21 @@ const CountryList = props => {
     1}/${date.getDate()}/${date.getFullYear()}`;
 
   const totalColumnToggle = () => {
+    setLoading(true);
     setTotalSort(totalSort === "asc" ? "desc" : "asc");
     setRecoveredSort(null);
     setDeathsSort(null);
   };
 
   const recoveredColumnToggle = () => {
+    setLoading(true);
     setTotalSort(null);
     setRecoveredSort(recoveredSort === "asc" ? "desc" : "asc");
     setDeathsSort(null);
   };
 
   const deathsColumnToggle = () => {
+    setLoading(true);
     setTotalSort(null);
     setRecoveredSort(null);
     setDeathsSort(deathsSort === "asc" ? "desc" : "asc");
@@ -125,28 +129,34 @@ const CountryList = props => {
       setCountries([
         ...countries.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed)
       ]);
+      setLoading(false);
     } else if (totalSort === "asc") {
       setCountries([
         ...countries.sort((a, b) => a.TotalConfirmed - b.TotalConfirmed)
       ]);
+      setLoading(false);
     }
     if (recoveredSort === "desc") {
       setCountries([
         ...countries.sort((a, b) => b.TotalRecovered - a.TotalRecovered)
       ]);
+      setLoading(false);
     } else if (recoveredSort === "asc") {
       setCountries([
         ...countries.sort((a, b) => a.TotalRecovered - b.TotalRecovered)
       ]);
+      setLoading(false);
     }
     if (deathsSort === "desc") {
       setCountries([
         ...countries.sort((a, b) => b.TotalDeaths - a.TotalDeaths)
       ]);
+      setLoading(false);
     } else if (deathsSort === "asc") {
       setCountries([
         ...countries.sort((a, b) => a.TotalDeaths - b.TotalDeaths)
       ]);
+      setLoading(false);
     }
   }, [totalSort, recoveredSort, deathsSort]);
 
@@ -161,8 +171,8 @@ const CountryList = props => {
         <View>
           <View style={styles.homePieChart}>
             <Text style={styles.homePieChartTitle}>
-              <Text style={styles.bold}>{stats.total}</Text> people got COVID-19
-              as of {today}.
+              <Text style={styles.bold}>{stats.total.toLocaleString()}</Text>{" "}
+              people got COVID-19 as of {today}.
             </Text>
             <PieChart
               data={data}
@@ -197,7 +207,9 @@ const CountryList = props => {
               <DataTable.Title numeric>
                 <Text
                   style={styles.tableHeaderText}
-                  onPress={() => totalColumnToggle()}
+                  onPress={() => {
+                    totalColumnToggle();
+                  }}
                 >
                   {totalSort === "asc" ? (
                     <Icon name="sort-asc" size={12} color="white" />
@@ -212,7 +224,9 @@ const CountryList = props => {
               <DataTable.Title numeric>
                 <Text
                   style={styles.tableHeaderText}
-                  onPress={() => recoveredColumnToggle()}
+                  onPress={() => {
+                    recoveredColumnToggle();
+                  }}
                 >
                   {recoveredSort === "asc" ? (
                     <Icon name="sort-asc" size={12} color="white" />
@@ -227,7 +241,9 @@ const CountryList = props => {
               <DataTable.Title numeric>
                 <Text
                   style={styles.tableHeaderText}
-                  onPress={() => deathsColumnToggle()}
+                  onPress={() => {
+                    deathsColumnToggle();
+                  }}
                 >
                   {deathsSort === "asc" ? (
                     <Icon name="sort-asc" size={12} color="white" />
@@ -240,34 +256,42 @@ const CountryList = props => {
                 </Text>
               </DataTable.Title>
             </DataTable.Header>
-            {countries
-              .filter(({ Country }) =>
-                Country.toLowerCase().includes(search.toLowerCase())
-              )
-              .map((country, i) => {
-                return (
-                  <DataTable.Row
-                    onPress={() =>
-                      props.navigation.navigate("CountryDetails", {
-                        slug: country.Slug
-                      })
-                    }
-                    key={i}
-                    style={i % 2 ? styles.altBg : {}}
-                  >
-                    <DataTable.Cell>{country.Country}</DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {country.TotalConfirmed.toLocaleString()}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {country.TotalRecovered.toLocaleString()}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {country.TotalDeaths.toLocaleString()}
-                    </DataTable.Cell>
-                  </DataTable.Row>
-                );
-              })}
+            {loading ? (
+              <DataTable.Row>
+                <DataTable.Cell style={{ justifyContent: "center" }}>
+                  <ActivityIndicator />
+                </DataTable.Cell>
+              </DataTable.Row>
+            ) : (
+              countries
+                .filter(({ Country }) =>
+                  Country.toLowerCase().includes(search.toLowerCase())
+                )
+                .map((country, i) => {
+                  return (
+                    <DataTable.Row
+                      onPress={() =>
+                        props.navigation.navigate("CountryDetails", {
+                          slug: country.Slug
+                        })
+                      }
+                      key={i}
+                      style={i % 2 ? styles.altBg : {}}
+                    >
+                      <DataTable.Cell>{country.Country}</DataTable.Cell>
+                      <DataTable.Cell numeric>
+                        {country.TotalConfirmed.toLocaleString()}
+                      </DataTable.Cell>
+                      <DataTable.Cell numeric>
+                        {country.TotalRecovered.toLocaleString()}
+                      </DataTable.Cell>
+                      <DataTable.Cell numeric>
+                        {country.TotalDeaths.toLocaleString()}
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  );
+                })
+            )}
           </DataTable>
         </View>
       )}
