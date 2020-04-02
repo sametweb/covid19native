@@ -20,15 +20,14 @@ import {
 
 const CountryDetails = props => {
 	const { slug } = props.route.params;
-
+	const [country, setCountry] = useState("");
 	const [confirmed, setConfirmed] = useState([]);
 	const [recovered, setRecovered] = useState([]);
 	const [deaths, setDeaths] = useState([]);
 	const [fifteenDays, setFifteenDays] = useState([]);
 	const [dailyStats, setDailyStats] = useState({
 		date: [],
-		recovered: [],
-		deaths: []
+		confirmed: []
 	});
 
 	const getCases = country => {
@@ -37,16 +36,17 @@ const CountryDetails = props => {
 				`https://api.covid19api.com/total/country/${country}/status/confirmed`
 			)
 			.then(res => {
+				console.log(res.data);
+				setCountry(res.data[0]?.Country);
 				setConfirmed(res.data[res.data.length - 1].Cases);
 				const dailyConfirmed = res.data.map(({ Cases }) => Cases);
-				const fifteenDays = dailyConfirmed.slice(1).slice(-15);
 
 				const date = res.data.map(({ Date }) => Date);
-				const lastFifteenDays = date.map(date => date.slice(6, 10));
-				setFifteenDays(fifteenDays);
+
 				setDailyStats({
 					...dailyStats,
-					date: lastFifteenDays.slice(1).slice(-15)
+					date: date,
+					confirmed: dailyConfirmed
 				});
 			})
 			.catch(error => console.log(error));
@@ -80,26 +80,23 @@ const CountryDetails = props => {
 	}, [slug]);
 
 	const screenWidth = Dimensions.get("window").width - 20;
-	const title = (slug.charAt(0).toUpperCase() + slug.slice(1)).replace(
-		"-",
-		" "
-	);
+	const data = dailyStats.confirmed.map(day => {});
+
+	const lineChartData = [
+		{ x: 1, y: 2 },
+		{ x: 2, y: 3 },
+		{ x: 3, y: 5 },
+		{ x: 4, y: 4 },
+		{ x: 5, y: 7 }
+	];
 
 	return (
 		<SafeAreaView>
 			<KeyboardAvoidingView behavior='padding'>
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
 					<View style={styles.container}>
-						<Text style={styles.country}>{title}</Text>
-						{/* {confirmed ? (
-							<View style={styles.chartContainer}>
-								<Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
-							
-							</View>
-						) : (
-							<Text>Loading...</Text>
-						)} */}
-						{fifteenDays.length ? (
+						<Text style={styles.country}>{country}</Text>
+						{dailyStats.confirmed.length ? (
 							<View style={styles.chartContainer}>
 								<Text style={styles.chartHeader}>COVID-19's Spread</Text>
 								<VictoryChart
@@ -122,13 +119,7 @@ const CountryDetails = props => {
 								>
 									<VictoryLine
 										// labelComponent={<VictoryTooltip renderInPortal={false} />}
-										data={[
-											{ x: 1, y: 2 },
-											{ x: 2, y: 3 },
-											{ x: 3, y: 5 },
-											{ x: 4, y: 4 },
-											{ x: 5, y: 7 }
-										]}
+										data={lineChartData}
 										style={{
 											data: { stroke: "#c43a31" },
 											parent: { border: "1px solid #ccc" }
@@ -144,6 +135,14 @@ const CountryDetails = props => {
 						) : (
 							<Text>Loading...</Text>
 						)}
+						{/* {confirmed ? (
+							<View style={styles.chartContainer}>
+								<Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
+							
+							</View>
+						) : (
+							<Text>Loading...</Text>
+						)} */}
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
