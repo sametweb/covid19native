@@ -7,7 +7,8 @@ import {
 	KeyboardAvoidingView,
 	ScrollView,
 	Dimensions,
-	StyleSheet
+	StyleSheet,
+	ActivityIndicator
 } from "react-native";
 
 import {
@@ -135,7 +136,6 @@ const CountryDetails = props => {
 						<Text style={styles.country}>{country}</Text>
 						{dailyStats.length ? (
 							<View style={styles.chartContainer}>
-								{/* <Text style={styles.chartHeader}>COVID-19's Spread</Text> */}
 								<VictoryChart
 									padding={{ left: 60, top: 80, bottom: 50, right: 20 }}
 									width={screenWidth}
@@ -242,7 +242,7 @@ const CountryDetails = props => {
 								</VictoryChart>
 							</View>
 						) : (
-							<Text>Loading...</Text>
+							<ActivityIndicator size='large' />
 						)}
 						{/* {confirmed ? (
 							<View style={styles.chartContainer}>
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 		marginBottom: 40,
 		borderRadius: 5,
-		backgroundColor: "#75bdd1"
+		backgroundColor: "#00d1ff"
 	},
 	chartHeader: {
 		color: "#fff",
