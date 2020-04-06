@@ -12,13 +12,17 @@ import {
 } from "react-native";
 
 import {
+	VictoryContainer,
 	VictoryChart,
 	VictoryTheme,
 	VictoryLine,
 	VictoryVoronoiContainer,
 	VictoryTooltip,
 	VictoryAxis,
-	VictoryLegend
+	VictoryLegend,
+	VictoryStack,
+	VictoryBar,
+	VictoryPie
 } from "victory-native";
 
 const CountryDetails = props => {
@@ -29,55 +33,15 @@ const CountryDetails = props => {
 	const [deaths, setDeaths] = useState([]);
 	const [dailyStats, setDailyStats] = useState([]);
 
-	// const getCases = country => {
-	// 	axios
-	// 		.get(
-	// 			`https://api.covid19api.com/total/country/${country}/status/confirmed`
-	// 		)
-	// 		.then(res => {
-	// 			setCountry(res.data[0]?.Country);
-	// 			setConfirmed(res.data[res.data.length - 1].Cases);
-
-	// 			const dailyConfirmed = res.data.map(({ Cases }) => Cases);
-	// 			const date = res.data.map(({ Date }) => Date);
-
-	// 			setDailyStats({
-	// 				...dailyStats,
-	// 				confirmed: [{ date: date, confirmed: dailyConfirmed }]
-	// 			});
-	// 		})
-	// 		.catch(error => console.log(error));
-
-	// 	axios
-	// 		.get(
-	// 			`https://api.covid19api.com/total/country/${country}/status/recovered`
-	// 		)
-	// 		.then(res => {
-	// 			setRecovered(res.data[res.data.length - 1].Cases);
-	// 			// const dailyRecovered = res.data.map(({ Cases }) => Cases);
-	// 				// 			// setDailyStats({ ...dailyStats, recovered: fifteenDays });
-	//
-	// 		})
-	// 		.catch(error => console.log(error));
-
-	// 	axios
-	// 		.get(`https://api.covid19api.com/total/country/${country}/status/deaths`)
-	// 		.then(res => {
-	// 			setDeaths(res.data[res.data.length - 1].Cases);
-	// 			// const dailyDeaths = res.data.map(({ Cases }) => Cases);
-	// 			// setDailyStats({ ...dailyStats, deaths: dailyDeaths });
-	// 			// console.log("DEATHS", dailyStats.deaths);
-	// 		})
-	// 		.catch(error => console.log(error));
-	// };
-
 	const getCases = country => {
 		const confirmedRequest = axios.get(
 			`https://api.covid19api.com/total/dayone/country/${country}/status/confirmed`
 		);
+
 		const recoveredRequest = axios.get(
 			`https://api.covid19api.com/total/dayone/country/${country}/status/recovered`
 		);
+
 		const deathsRequest = axios.get(
 			`https://api.covid19api.com/total/dayone/country/${country}/status/deaths`
 		);
@@ -85,6 +49,9 @@ const CountryDetails = props => {
 		axios.all([confirmedRequest, recoveredRequest, deathsRequest]).then(
 			axios.spread((...responses) => {
 				setCountry(responses[1].data[0]?.Country);
+				setConfirmed(responses[0].data[responses[0].data.length - 1].Cases);
+				setRecovered(responses[1].data[responses[1].data.length - 1]?.Cases);
+				setDeaths(responses[2].data[responses[2].data.length - 1]?.Cases);
 				setDailyStats(
 					responses[0].data.map(confirmed => {
 						const recovered = responses[1].data.length
@@ -114,6 +81,7 @@ const CountryDetails = props => {
 
 	const screenWidth = Dimensions.get("window").width - 20;
 
+	// Line Chart Data
 	const confirmedData = dailyStats.map((day, index) => {
 		return { x: day.date, y: day.confirmed };
 	});
@@ -126,16 +94,19 @@ const CountryDetails = props => {
 		return { x: day.date, y: day.deaths };
 	});
 
-	console.log("dailyStats", dailyStats[0]);
-
 	return (
 		<SafeAreaView>
 			<KeyboardAvoidingView behavior='padding'>
 				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
-					<View style={styles.container}>
-						<Text style={styles.country}>{country}</Text>
-						{dailyStats.length ? (
-							<View style={styles.chartContainer}>
+					{dailyStats.length ? (
+						<View style={styles.container}>
+							<Text style={styles.country}>{country}</Text>
+							<View
+								style={{
+									...styles.chartContainer,
+									backgroundColor: chartColors.lineChartBackground
+								}}
+							>
 								<VictoryChart
 									padding={{ left: 60, top: 80, bottom: 50, right: 20 }}
 									width={screenWidth}
@@ -161,7 +132,15 @@ const CountryDetails = props => {
 										/>
 									}
 								>
-									<VictoryAxis dependentAxis />
+									<VictoryAxis
+										dependentAxis
+										style={{
+											grid: {
+												stroke: "darkgray",
+												pointerEvents: "painted"
+											}
+										}}
+									/>
 									<VictoryAxis
 										style={{
 											tickLabels: { angle: -60 },
@@ -185,20 +164,23 @@ const CountryDetails = props => {
 										data={[
 											{
 												name: "Confirmed",
-												symbol: { fill: "#777a77" }
+												symbol: { fill: chartColors.confirmed }
 											},
-											{ name: "Recovered", symbol: { fill: "#32a840" } },
-											{ name: "Deaths", symbol: { fill: "#c43a31" } }
+											{
+												name: "Recovered",
+												symbol: { fill: chartColors.recovered }
+											},
+											{ name: "Deaths", symbol: { fill: chartColors.deaths } }
 										]}
 									/>
 									<VictoryLine
 										data={confirmedData}
 										style={{
 											data: {
-												stroke: "#777a77",
+												stroke: chartColors.confirmed,
 												strokeWidth: ({ active }) => (active ? 4 : 2)
 											},
-											labels: { fill: "#777a77" },
+											labels: { fill: chartColors.confirmed },
 											parent: { border: "1px solid #ccc" }
 										}}
 										interpolation='catmullRom'
@@ -211,10 +193,10 @@ const CountryDetails = props => {
 										data={recoveredData}
 										style={{
 											data: {
-												stroke: "#32a840",
+												stroke: chartColors.recovered,
 												strokeWidth: ({ active }) => (active ? 4 : 2)
 											},
-											labels: { fill: "#32a840" },
+											labels: { fill: chartColors.recovered },
 											parent: { border: "1px solid #ccc" }
 										}}
 										interpolation='catmullRom'
@@ -227,10 +209,10 @@ const CountryDetails = props => {
 										data={deathsData}
 										style={{
 											data: {
-												stroke: "#c43a31",
+												stroke: chartColors.deaths,
 												strokeWidth: ({ active }) => (active ? 4 : 2)
 											},
-											labels: { fill: "#c43a31" },
+											labels: { fill: chartColors.deaths },
 											parent: { border: "1px solid #ccc" }
 										}}
 										interpolation='catmullRom'
@@ -241,22 +223,48 @@ const CountryDetails = props => {
 									/>
 								</VictoryChart>
 							</View>
-						) : (
-							<ActivityIndicator size='large' />
-						)}
-						{/* {confirmed ? (
-							<View style={styles.chartContainer}>
-								<Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
-							
+
+							<View
+								style={{
+									...styles.chartContainer,
+									backgroundColor: chartColors.pieChartBackground
+								}}
+							>
+								<VictoryPie
+									containerComponent={<VictoryContainer responsive />}
+									width={screenWidth}
+									data={[
+										{ x: " ", y: confirmed },
+										{ x: " ", y: recovered },
+										{ x: " ", y: deaths }
+									]}
+									colorScale={[
+										chartColors.confirmed,
+										chartColors.recovered,
+										chartColors.deaths
+									]}
+									animate={{
+										duration: 2000
+									}}
+								/>
 							</View>
-						) : (
-							<Text>Loading...</Text>
-						)} */}
-					</View>
+						</View>
+					) : (
+						<ActivityIndicator size='large' style={{ marginTop: 50 }} />
+					)}
 				</ScrollView>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
+};
+
+// Styles
+const chartColors = {
+	lineChartBackground: "transparent",
+	pieChartBackground: "transparent",
+	confirmed: "#3e4a61",
+	recovered: "#00e0ff",
+	deaths: "#ff5959"
 };
 
 const styles = StyleSheet.create({
@@ -282,8 +290,7 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		textAlign: "center",
 		marginTop: 10
-	},
-	chart: {}
+	}
 });
 
 export default CountryDetails;
