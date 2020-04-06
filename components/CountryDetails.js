@@ -20,8 +20,6 @@ import {
 	VictoryTooltip,
 	VictoryAxis,
 	VictoryLegend,
-	VictoryStack,
-	VictoryBar,
 	VictoryPie
 } from "victory-native";
 
@@ -32,6 +30,9 @@ const CountryDetails = props => {
 	const [recovered, setRecovered] = useState([]);
 	const [deaths, setDeaths] = useState([]);
 	const [dailyStats, setDailyStats] = useState([]);
+
+	// For animating the PieChart
+	const [angle, setAngle] = useState(0);
 
 	const getCases = country => {
 		const confirmedRequest = axios.get(
@@ -79,6 +80,10 @@ const CountryDetails = props => {
 		getCases(slug);
 	}, [slug]);
 
+	setTimeout(() => {
+		setAngle(360);
+	}, 1000);
+
 	const screenWidth = Dimensions.get("window").width - 20;
 
 	// Line Chart Data
@@ -108,7 +113,12 @@ const CountryDetails = props => {
 								}}
 							>
 								<VictoryChart
-									padding={{ left: 60, top: 80, bottom: 50, right: 20 }}
+									padding={{
+										left: confirmed > 9999 ? 55 : confirmed > 999 ? 45 : 35,
+										top: 80,
+										bottom: 50,
+										right: 20
+									}}
 									width={screenWidth}
 									theme={VictoryTheme.material}
 									domainPadding={{ y: 10 }}
@@ -128,7 +138,6 @@ const CountryDetails = props => {
 													flyoutHeight={50}
 												/>
 											}
-											// voronoiPadding={5}
 										/>
 									}
 								>
@@ -159,7 +168,8 @@ const CountryDetails = props => {
 										orientation='horizontal'
 										gutter={20}
 										style={{
-											title: { fontSize: 20 }
+											title: { fontSize: 20 },
+											marginBottom: 50
 										}}
 										data={[
 											{
@@ -224,30 +234,39 @@ const CountryDetails = props => {
 								</VictoryChart>
 							</View>
 
-							<View
-								style={{
-									...styles.chartContainer,
-									backgroundColor: chartColors.pieChartBackground
-								}}
-							>
-								<VictoryPie
-									containerComponent={<VictoryContainer responsive />}
-									width={screenWidth}
-									data={[
-										{ x: " ", y: confirmed },
-										{ x: " ", y: recovered },
-										{ x: " ", y: deaths }
-									]}
-									colorScale={[
-										chartColors.confirmed,
-										chartColors.recovered,
-										chartColors.deaths
-									]}
-									animate={{
-										duration: 2000
+							{confirmed ? (
+								<View
+									style={{
+										...styles.chartContainer,
+										backgroundColor: chartColors.pieChartBackground
 									}}
-								/>
-							</View>
+								>
+									<VictoryPie
+										containerComponent={<VictoryContainer responsive />}
+										width={screenWidth}
+										data={[
+											{ x: " ", y: confirmed },
+											{ x: " ", y: recovered },
+											{ x: " ", y: deaths }
+										]}
+										colorScale={[
+											chartColors.confirmed,
+											chartColors.recovered,
+											chartColors.deaths
+										]}
+										animate={{
+											easing: "exp",
+											duration: 2000,
+											onLoad: { duration: 1500 }
+										}}
+										innerRadius={80}
+										endAngle={angle}
+										padAngle={1}
+									/>
+								</View>
+							) : (
+								<Text>Loading Pie</Text>
+							)}
 						</View>
 					) : (
 						<ActivityIndicator size='large' style={{ marginTop: 50 }} />
@@ -275,13 +294,13 @@ const styles = StyleSheet.create({
 		marginTop: 30
 	},
 	country: {
-		fontSize: 24,
+		fontSize: 28,
 		marginBottom: 20,
 		fontWeight: "bold"
 	},
 	chartContainer: {
 		marginTop: 10,
-		marginBottom: 40,
+		marginBottom: 5,
 		borderRadius: 5,
 		backgroundColor: "#00d1ff"
 	},
