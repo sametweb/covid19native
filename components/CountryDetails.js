@@ -1,210 +1,315 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  View,
-  Text,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  ScrollView,
-  Dimensions,
-  StyleSheet
+	View,
+	Text,
+	SafeAreaView,
+	KeyboardAvoidingView,
+	ScrollView,
+	Dimensions,
+	StyleSheet,
+	ActivityIndicator
 } from "react-native";
 
-import { BarChart, LineChart } from "react-native-chart-kit";
+import {
+	VictoryContainer,
+	VictoryChart,
+	VictoryTheme,
+	VictoryLine,
+	VictoryVoronoiContainer,
+	VictoryTooltip,
+	VictoryAxis,
+	VictoryLegend,
+	VictoryPie
+} from "victory-native";
 
 const CountryDetails = props => {
-  const { slug } = props.route.params;
+	const { slug } = props.route.params;
+	const [country, setCountry] = useState("");
+	const [confirmed, setConfirmed] = useState([]);
+	const [recovered, setRecovered] = useState([]);
+	const [deaths, setDeaths] = useState([]);
+	const [dailyStats, setDailyStats] = useState([]);
 
-  const [confirmed, setConfirmed] = useState([]);
-  const [recovered, setRecovered] = useState([]);
-  const [deaths, setDeaths] = useState([]);
-  const [fifteenDays, setFifteenDays] = useState([]);
-  const [dailyStats, setDailyStats] = useState({
-    date: [],
-    recovered: [],
-    deaths: []
-  });
+	// For animating the PieChart
+	const [angle, setAngle] = useState(0);
 
-  const getCases = country => {
-    axios
-      .get(
-        `https://api.covid19api.com/total/country/${country}/status/confirmed`
-      )
-      .then(res => {
-        setConfirmed(res.data[res.data.length - 1].Cases);
-        const dailyConfirmed = res.data.map(({ Cases }) => Cases);
-        const fifteenDays = dailyConfirmed.slice(1).slice(-15);
+	const getCases = country => {
+		const confirmedRequest = axios.get(
+			`https://api.covid19api.com/total/dayone/country/${country}/status/confirmed`
+		);
 
-        const date = res.data.map(({ Date }) => Date);
-        const lastFifteenDays = date.map(date => date.slice(6, 10));
-        setFifteenDays(fifteenDays);
-        setDailyStats({
-          ...dailyStats,
-          date: lastFifteenDays.slice(1).slice(-15)
-        });
-      })
-      .catch(error => console.log(error));
+		const recoveredRequest = axios.get(
+			`https://api.covid19api.com/total/dayone/country/${country}/status/recovered`
+		);
 
-    axios
-      .get(
-        `https://api.covid19api.com/total/country/${country}/status/recovered`
-      )
-      .then(res => {
-        setRecovered(res.data[res.data.length - 1].Cases);
-        // const dailyRecovered = res.data.map(({ Cases }) => Cases);
-        // const fifteenDays = dailyRecovered.slice(1).slice(-30);
-        // setDailyStats({ ...dailyStats, recovered: fifteenDays });
-        // console.log("RECOVERED", dailyStats.recovered);
-      })
-      .catch(error => console.log(error));
+		const deathsRequest = axios.get(
+			`https://api.covid19api.com/total/dayone/country/${country}/status/deaths`
+		);
 
-    axios
-      .get(`https://api.covid19api.com/total/country/${country}/status/deaths`)
-      .then(res => {
-        setDeaths(res.data[res.data.length - 1].Cases);
-        // const dailyDeaths = res.data.map(({ Cases }) => Cases);
-        // setDailyStats({ ...dailyStats, deaths: dailyDeaths });
-        // console.log("DEATHS", dailyStats.deaths);
-      })
-      .catch(error => console.log(error));
-  };
+		axios.all([confirmedRequest, recoveredRequest, deathsRequest]).then(
+			axios.spread((...responses) => {
+				setCountry(responses[1].data[0]?.Country);
+				setConfirmed(responses[0].data[responses[0].data.length - 1].Cases);
+				setRecovered(responses[1].data[responses[1].data.length - 1]?.Cases);
+				setDeaths(responses[2].data[responses[2].data.length - 1]?.Cases);
+				setDailyStats(
+					responses[0].data.map(confirmed => {
+						const recovered = responses[1].data.length
+							? responses[1].data.find(
+									recovered => recovered.Date === confirmed.Date
+							  )
+							: [];
+						const deaths = responses[2].data.length
+							? responses[2].data.find(death => death.Date === confirmed.Date)
+							: [];
 
-  // console.log("CONFIRMED", dailyStats.confirmed);
-  // console.log("LAST MONTH", fifteenDays);
-  console.log("DATE", dailyStats.date);
+						return {
+							date: confirmed.Date.substr(6, 4),
+							confirmed: confirmed.Cases,
+							recovered: recovered?.Cases || 0,
+							deaths: deaths?.Cases || 0
+						};
+					})
+				);
+			})
+		);
+	};
 
-  useEffect(() => {
-    getCases(slug);
-  }, [slug]);
+	useEffect(() => {
+		getCases(slug);
+	}, [slug]);
 
-  const barChartData = {
-    labels: [
-      `Recovered ${recovered}
-		`,
-      `Deaths ${deaths}`
-    ],
-    datasets: [
-      {
-        data: [recovered, deaths]
-      }
-    ]
-  };
+	setTimeout(() => {
+		setAngle(360);
+	}, 1000);
 
-  const lineChartData = {
-    labels: dailyStats.date,
-    datasets: [
-      {
-        data: fifteenDays
-      }
-    ]
-  };
+	const screenWidth = Dimensions.get("window").width - 20;
 
-  const chartConfig = {
-    backgroundGradientFrom: "#333333",
-    backgroundGradientTo: "#262626",
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    propsForDots: {
-      r: "5",
-      strokeWidth: "2",
-      stroke: "#ffa726"
-    }
-  };
+	// Line Chart Data
+	const confirmedData = dailyStats.map((day, index) => {
+		return { x: day.date, y: day.confirmed };
+	});
 
-  const screenWidth = Dimensions.get("window").width - 20;
-  const title = (slug.charAt(0).toUpperCase() + slug.slice(1)).replace(
-    "-",
-    " "
-  );
+	const recoveredData = dailyStats.map((day, index) => {
+		return { x: day.date, y: day.recovered };
+	});
 
-  return (
-    <SafeAreaView>
-      <KeyboardAvoidingView behavior="padding">
-        <ScrollView style={{ padding: 10 }} keyboardDismissMode="on-drag">
-          <View style={styles.container}>
-            <Text style={styles.country}>{title}</Text>
-            {confirmed ? (
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartHeader}>Confirmed: {confirmed}</Text>
-                <BarChart
-                  style={styles.chart}
-                  data={barChartData}
-                  width={screenWidth}
-                  height={220}
-                  chartConfig={chartConfig}
-                  fromZero
-                />
-              </View>
-            ) : (
-              <Text>Loading...</Text>
-            )}
-            {fifteenDays.length ? (
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartHeader}>
-                  COVID-19's Spread last 15 days
-                </Text>
-                <LineChart
-                  style={styles.chart}
-                  data={lineChartData}
-                  width={screenWidth}
-                  height={256}
-                  chartConfig={chartConfig}
-                  fromZero
-                  bezier
-                  withInnerLines={false}
-                  verticalLabelRotation={60}
-                  // renderDotContent={({ x, y, index }) => (
-                  // 	<Text
-                  // 		style={{
-                  // 			position: "absolute",
-                  // 			top: y,
-                  // 			left: x,
-                  // 			color: "#fff"
-                  // 		}}
-                  // 	>
-                  // 		a
-                  // 	</Text>
-                  // )}
-                  // formatXLabel={x => "a"}
-                />
-              </View>
-            ) : (
-              <Text>Loading...</Text>
-            )}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+	const deathsData = dailyStats.map((day, index) => {
+		return { x: day.date, y: day.deaths };
+	});
+
+	return (
+		<SafeAreaView>
+			<KeyboardAvoidingView behavior='padding'>
+				<ScrollView style={{ padding: 10 }} keyboardDismissMode='on-drag'>
+					{dailyStats.length ? (
+						<View style={styles.container}>
+							<Text style={styles.country}>{country}</Text>
+							<View
+								style={{
+									...styles.chartContainer,
+									backgroundColor: chartColors.lineChartBackground
+								}}
+							>
+								<VictoryChart
+									padding={{
+										left: confirmed > 9999 ? 55 : confirmed > 999 ? 45 : 35,
+										top: 80,
+										bottom: 50,
+										right: 20
+									}}
+									width={screenWidth}
+									theme={VictoryTheme.material}
+									domainPadding={{ y: 10 }}
+									containerComponent={
+										<VictoryVoronoiContainer
+											mouseFollowTooltips
+											voronoiDimension='x'
+											labels={({ datum }) => `${datum.y}`}
+											labelComponent={
+												<VictoryTooltip
+													constrainToVisibleArea
+													cornerRadius={5}
+													flyoutStyle={{ fill: "white" }}
+													center={{ x: screenWidth / 2, y: 120 }}
+													pointerOrientation='bottom'
+													flyoutWidth={80}
+													flyoutHeight={50}
+												/>
+											}
+										/>
+									}
+								>
+									<VictoryAxis
+										dependentAxis
+										style={{
+											grid: {
+												stroke: "darkgray",
+												pointerEvents: "painted"
+											}
+										}}
+									/>
+									<VictoryAxis
+										style={{
+											tickLabels: { angle: -60 },
+											grid: {
+												fill: "none",
+												stroke: "none",
+												pointerEvents: "painted"
+											}
+										}}
+									/>
+									<VictoryLegend
+										x={screenWidth / 6}
+										y={10}
+										title="COVID-19's Spread"
+										centerTitle
+										orientation='horizontal'
+										gutter={20}
+										style={{
+											title: { fontSize: 20 },
+											marginBottom: 50
+										}}
+										data={[
+											{
+												name: "Confirmed",
+												symbol: { fill: chartColors.confirmed }
+											},
+											{
+												name: "Recovered",
+												symbol: { fill: chartColors.recovered }
+											},
+											{ name: "Deaths", symbol: { fill: chartColors.deaths } }
+										]}
+									/>
+									<VictoryLine
+										data={confirmedData}
+										style={{
+											data: {
+												stroke: chartColors.confirmed,
+												strokeWidth: ({ active }) => (active ? 4 : 2)
+											},
+											labels: { fill: chartColors.confirmed },
+											parent: { border: "1px solid #ccc" }
+										}}
+										interpolation='catmullRom'
+										animate={{
+											duration: 2000,
+											onLoad: { duration: 1000 }
+										}}
+									/>
+									<VictoryLine
+										data={recoveredData}
+										style={{
+											data: {
+												stroke: chartColors.recovered,
+												strokeWidth: ({ active }) => (active ? 4 : 2)
+											},
+											labels: { fill: chartColors.recovered },
+											parent: { border: "1px solid #ccc" }
+										}}
+										interpolation='catmullRom'
+										animate={{
+											duration: 2000,
+											onLoad: { duration: 1000 }
+										}}
+									/>
+									<VictoryLine
+										data={deathsData}
+										style={{
+											data: {
+												stroke: chartColors.deaths,
+												strokeWidth: ({ active }) => (active ? 4 : 2)
+											},
+											labels: { fill: chartColors.deaths },
+											parent: { border: "1px solid #ccc" }
+										}}
+										interpolation='catmullRom'
+										animate={{
+											duration: 2000,
+											onLoad: { duration: 1000 }
+										}}
+									/>
+								</VictoryChart>
+							</View>
+
+							{confirmed ? (
+								<View
+									style={{
+										...styles.chartContainer,
+										backgroundColor: chartColors.pieChartBackground
+									}}
+								>
+									<VictoryPie
+										containerComponent={<VictoryContainer responsive />}
+										width={screenWidth}
+										data={[
+											{ x: " ", y: confirmed },
+											{ x: " ", y: recovered },
+											{ x: " ", y: deaths }
+										]}
+										colorScale={[
+											chartColors.confirmed,
+											chartColors.recovered,
+											chartColors.deaths
+										]}
+										animate={{
+											easing: "exp",
+											duration: 2000,
+											onLoad: { duration: 1500 }
+										}}
+										innerRadius={80}
+										endAngle={angle}
+										padAngle={1}
+									/>
+								</View>
+							) : (
+								<Text>Loading Pie</Text>
+							)}
+						</View>
+					) : (
+						<ActivityIndicator size='large' style={{ marginTop: 50 }} />
+					)}
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</SafeAreaView>
+	);
+};
+
+// Styles
+const chartColors = {
+	lineChartBackground: "transparent",
+	pieChartBackground: "transparent",
+	confirmed: "#3e4a61",
+	recovered: "#00e0ff",
+	deaths: "#ff5959"
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 30
-  },
-  country: {
-    fontSize: 24,
-    marginBottom: 20,
-    fontWeight: "bold"
-  },
-  chartContainer: {
-    marginTop: 10,
-    marginBottom: 40,
-    borderRadius: 5,
-    backgroundColor: "#333333"
-  },
-  chartHeader: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 10
-  },
-  chart: {
-    marginVertical: 8
-  }
+	container: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 30
+	},
+	country: {
+		fontSize: 28,
+		marginBottom: 20,
+		fontWeight: "bold"
+	},
+	chartContainer: {
+		marginTop: 10,
+		marginBottom: 5,
+		borderRadius: 5,
+		backgroundColor: "#00d1ff"
+	},
+	chartHeader: {
+		color: "#fff",
+		fontWeight: "bold",
+		textAlign: "center",
+		marginTop: 10
+	}
 });
 
 export default CountryDetails;
