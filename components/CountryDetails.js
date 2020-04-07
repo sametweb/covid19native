@@ -99,6 +99,13 @@ const CountryDetails = props => {
 		return { x: day.date, y: day.deaths };
 	});
 
+	// Pie Chart Data
+	const pieData = [
+		{ x: `${confirmed}`, y: confirmed, fill: chartColors.confirmed },
+		{ x: `${recovered}`, y: recovered, fill: chartColors.recovered },
+		{ x: `${deaths}`, y: deaths, fill: chartColors.deaths }
+	];
+
 	return (
 		<SafeAreaView>
 			<KeyboardAvoidingView behavior='padding'>
@@ -152,13 +159,14 @@ const CountryDetails = props => {
 									/>
 									<VictoryAxis
 										style={{
-											tickLabels: { angle: -60 },
+											// tickLabels: { angle: -60 },
 											grid: {
 												fill: "none",
 												stroke: "none",
 												pointerEvents: "painted"
 											}
 										}}
+										fixLabelOverlap={true}
 									/>
 									<VictoryLegend
 										x={screenWidth / 6}
@@ -168,8 +176,7 @@ const CountryDetails = props => {
 										orientation='horizontal'
 										gutter={20}
 										style={{
-											title: { fontSize: 20 },
-											marginBottom: 50
+											title: { fontSize: 20 }
 										}}
 										data={[
 											{
@@ -244,11 +251,7 @@ const CountryDetails = props => {
 									<VictoryPie
 										containerComponent={<VictoryContainer responsive />}
 										width={screenWidth}
-										data={[
-											{ x: " ", y: confirmed },
-											{ x: " ", y: recovered },
-											{ x: " ", y: deaths }
-										]}
+										data={pieData}
 										colorScale={[
 											chartColors.confirmed,
 											chartColors.recovered,
@@ -259,9 +262,13 @@ const CountryDetails = props => {
 											duration: 2000,
 											onLoad: { duration: 1500 }
 										}}
+										// radius={({ index }) => (index == chosen ? 70 : 60)}
 										innerRadius={80}
 										endAngle={angle}
 										padAngle={1}
+										style={{
+											labels: { padding: 10, fill: ({ datum }) => datum.fill }
+										}}
 									/>
 								</View>
 							) : (
